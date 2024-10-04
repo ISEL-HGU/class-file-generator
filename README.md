@@ -2,14 +2,17 @@
 ClassFileGenerator is simple program that generates Java Virtual Machine (JVM) 
 class files. It gets source directory that contains formatted Json files as an 
 input and outputs desired class files to destination directory.  
+</br>
 
 ## 1. Requirements
+</br>
 
 ## 2. Building
 ClassFileGenerator uses Maven to build the project.  
 ```console
 mvn install
 ```
+</br>
 
 ## 3. Environment Setting
 ClassFileGenerator uses script to run the application. Path to the script 
@@ -29,6 +32,7 @@ PATH=$PATH:path/to/repo/scripts
 
 [Environment]::SetEnvironmentVariable('MAVEN_LOCAL', 'path\to\maven\local\repo', 'Machine')
 ```
+</br>
 
 ## 4. Usage
 After [building](#2-building) and 
@@ -47,6 +51,7 @@ cfg [options] path_to_directory
 
 <code>path_to_directory</code> denotes path of the source directory. To see 
 <code>options</code>, use <code>-h</code> or <code>--help</code>.
+<br></br>
 
 ## 5. Json File Format
 Json files in the source directory must follow following format.
@@ -59,4 +64,3 @@ Json files in the source directory must follow following format.
     byteStrings: ["hex_string", ...]
 }
 ```
-
