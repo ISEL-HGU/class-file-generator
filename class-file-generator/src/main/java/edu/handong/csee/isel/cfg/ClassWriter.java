@@ -58,6 +58,7 @@ public class ClassWriter {
         code.addReturn(null);
         code.setMaxLocals(1);
         minfo = new MethodInfo(cp, MethodInfo.nameInit, "()V");
+        minfo.setAccessFlags(AccessFlag.PUBLIC);
         minfo.setCodeAttribute(code.toCodeAttribute());
         cf.addMethod(minfo);
 
@@ -74,6 +75,7 @@ public class ClassWriter {
                                   bytecode, new ExceptionTable(cp));
         minfo = new MethodInfo(cf.getConstPool(), info.getMethodname(), 
                                info.getMethodDesc());
+        minfo.setAccessFlags(AccessFlag.PUBLIC);
         minfo.setCodeAttribute(cattr);  
         cf.addMethod(minfo);
         
