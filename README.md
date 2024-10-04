@@ -8,21 +8,26 @@ input and outputs desired class files to destination directory.
 ## 2. Building
 ClassFileGenerator uses Maven to build the project.  
 ```console
-cfg:~$ mvn 
+cfg:~$ mvn install
 ```
 
 ## 3. Environment Setting
-ClassFileGenerator uses script to execute the application. In order to execute 
-script in any location, path to the script needs to be set.
+ClassFileGenerator uses script to run the application. Path to the script 
+needs to be appended to environment variable <code>Path</code> in order to 
+execute the script in any location. Additionally, path to the local maven 
+repository need to be set to environment variable <code>MAVEN_LOCAL</code> in
+order to execute the script.
 
 ### Linux:
-```console
-cfg:~$ PATH=$PATH:path/to/repository/scripts
+```bash
+cfg:~$ PATH=$PATH:path/to/repo/scripts
 ```
 
 ### Windows:
-```console
-cfg:~$ setx /M "%path%;path\to\repository\scripts"
+```powershell
+cfg:~$ [Environment]::SetEnvironmentVariable('PATH', [Environment]::GetEnvironmentVariable('PATH', 'Machine') + ';path\to\class-file-generator\scripts', 'Machine')
+
+cfg:~$ [Environment]::SetEnvironmentVariable('MAVEN_LOCAL', 'path\to\maven\local\repo', 'Machine')
 ```
 
 ## 4. Usage
@@ -31,12 +36,12 @@ After [building](#2-building) and
 following commands.
 
 ### Linux:
-```console
+```bash
 cfg:~$ cfg.sh [options] path_to_directory
 ```
 
 ### Windows:
-```console
+```powershell
 cfg:~$ cfg.bat [options] path_to_directory 
 ```
 
@@ -45,7 +50,7 @@ cfg:~$ cfg.bat [options] path_to_directory
 
 ## 5. Json File Format
 Json files in the source directory must follow following format.
-```Json
+```
 {
     pacakagename: "package_name",
     classname: "class_name",
