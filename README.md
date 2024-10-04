@@ -8,7 +8,7 @@ input and outputs desired class files to destination directory.
 ## 2. Building
 ClassFileGenerator uses Maven to build the project.  
 ```console
-cfg:~$ mvn install
+mvn install
 ```
 
 ## 3. Environment Setting
@@ -20,29 +20,29 @@ order to execute the script.
 
 ### Linux:
 ```bash
-cfg:~$ PATH=$PATH:path/to/repo/scripts
+PATH=$PATH:path/to/repo/scripts
 ```
 
 ### Windows:
 ```powershell
-cfg:~$ [Environment]::SetEnvironmentVariable('PATH', [Environment]::GetEnvironmentVariable('PATH', 'Machine') + ';path\to\class-file-generator\scripts', 'Machine')
+[Environment]::SetEnvironmentVariable('PATH', [Environment]::GetEnvironmentVariable('PATH', 'Machine') + ';path\to\class-file-generator\scripts', 'Machine')
 
-cfg:~$ [Environment]::SetEnvironmentVariable('MAVEN_LOCAL', 'path\to\maven\local\repo', 'Machine')
+[Environment]::SetEnvironmentVariable('MAVEN_LOCAL', 'path\to\maven\local\repo', 'Machine')
 ```
 
 ## 4. Usage
 After [building](#2-building) and 
-[setting environment](#3-environment-setting), use the application with 
+[setting environment](#3-environment-setting), run the application with 
 following commands.
 
 ### Linux:
 ```bash
-cfg:~$ cfg.sh [options] path_to_directory
+cfg [options] path_to_directory
 ```
 
 ### Windows:
 ```powershell
-cfg:~$ cfg.bat [options] path_to_directory 
+cfg [options] path_to_directory 
 ```
 
 <code>path_to_directory</code> denotes path of the source directory. To see 
