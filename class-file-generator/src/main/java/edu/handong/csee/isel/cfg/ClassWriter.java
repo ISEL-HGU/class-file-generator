@@ -38,9 +38,9 @@ public class ClassWriter {
         final int MAX_SATCK = 64;
         final int MAX_LOCALS = 64;
 
-        byte[] bytecode;
+        byte[] code;
         String[] byteStrings;
-        Bytecode code;
+        Bytecode b;
         ClassFile cf; 
         ConstPool cp;
         CodeAttribute cattr;
@@ -52,27 +52,26 @@ public class ClassWriter {
         cf.setAccessFlags(AccessFlag.PUBLIC);
         cp = cf.getConstPool();
         
-        code = new Bytecode(cp);
-        code.addAload(0);
-        code.addInvokespecial("java.lang.Object", MethodInfo.nameInit, "()V");
-        code.addReturn(null);
-        code.setMaxLocals(1);
+        b = new Bytecode(cp);
+        b.addAload(0);
+        b.addInvokespecial("java.lang.Object", MethodInfo.nameInit, "()V");
+        b.addReturn(null);
+        b.setMaxLocals(1);
         minfo = new MethodInfo(cp, MethodInfo.nameInit, "()V");
         minfo.setAccessFlags(AccessFlag.PUBLIC);
-        minfo.setCodeAttribute(code.toCodeAttribute());
+        minfo.setCodeAttribute(b.toCodeAttribute());
         cf.addMethod(minfo);
 
         byteStrings = info.getByteStrings();
-        bytecode = new byte[byteStrings.length];
+        code = new byte[byteStrings.length];
 
-        for (int i = 0; i < bytecode.length; i++) {
-            bytecode[i] 
-                    = new BigInteger(byteStrings[i], 
+        for (int i = 0; i < code.length; i++) {
+            code[i] = new BigInteger(byteStrings[i], 
                                      ClassInfo.BYTESTRING_RADIX).byteValue();
         }
 
         cattr = new CodeAttribute(cp, MAX_SATCK, MAX_LOCALS, 
-                                  bytecode, new ExceptionTable(cp));
+                                  code, new ExceptionTable(cp));
         minfo = new MethodInfo(cf.getConstPool(), info.getMethodname(), 
                                info.getMethodDesc());
         minfo.setAccessFlags(AccessFlag.PUBLIC);
