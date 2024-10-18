@@ -1,31 +1,33 @@
 package edu.handong.csee.isel.cfg;
 
+import java.lang.IllegalAccessException;
+import java.lang.reflect.Field;
 import java.util.Arrays;
 
 /**
- * Class that contains information for creating class file
+ * Class that contains information for creating class file.
  */
-public class ClassInfo {
-    public static final int BYTESTRING_RADIX = 16;
-   
-    private String[] byteStrings;
+public class ClassInfo {  
+    private int[] bytecode;
     private String classname;
     private String methodname;
     private String methodDesc;
     private String packagename;
+    private int version;
 
-    public ClassInfo(String[] byteStrings, String classname, 
+    public ClassInfo(int[] bytecode, String classname, 
                      String methodname, String methodDesc, 
-                     String packagename) {
-        this.byteStrings = byteStrings;
+                     String packagename, int version) {
+        this.bytecode = bytecode;
         this.classname = classname;
         this.methodname = methodname;
         this.methodDesc = methodDesc;
         this.packagename = packagename;
+        this.version = version;
     }
 
-    public String[] getByteStrings() {
-        return byteStrings;
+    public int[] getBytecode() {
+        return bytecode;
     }
 
     public String getClassname() {
@@ -44,22 +46,34 @@ public class ClassInfo {
         return packagename;
     }
 
+    public int getVersion() {
+        return version;
+    }
+
     @Override
     public boolean equals(Object obj) {
-        if (obj == null) {
+        if (obj == null || !(obj instanceof ClassInfo)) {
             return false;
         } 
-
-        ClassInfo info = (ClassInfo) obj;
         
-        if (Arrays.equals(byteStrings, info.getByteStrings())
-                && classname.equals(info.getClassname())
-                && methodname.equals(info.getMethodname())
-                && methodDesc.equals(info.getMethodDesc())
-                && packagename.equals(info.getPackagename())) {
-            return true;
-        } else {
-            return false;
+        for (Field field : getClass().getDeclaredFields()) {
+            try {
+                Object val = field.get(this);
+
+                if (val instanceof int[]) {
+                    if (!Arrays.equals((int []) val, (int []) field.get(obj))) {
+                        return false;
+                    }
+                } else {
+                    if (!val.equals(field.get(obj))) {
+                        return false;
+                    }
+                }
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
         }
+        
+        return true;
     }
 }
