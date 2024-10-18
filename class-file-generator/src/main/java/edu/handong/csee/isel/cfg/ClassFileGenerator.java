@@ -1,7 +1,9 @@
 package edu.handong.csee.isel.cfg;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.FileVisitResult;
@@ -9,14 +11,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Logger;
 
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
-
-import javassist.bytecode.DuplicateMemberException;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
@@ -24,6 +22,8 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+
+import org.objectweb.asm.ClassWriter;
 
 public class ClassFileGenerator {
     private final Logger LOGGER 
@@ -52,97 +52,126 @@ public class ClassFileGenerator {
                                              .build());
     }
 
-    private List<ClassInfo> createClassInfos(File dir) throws IOException {
+    /**
+     * Generates class file to <code>dstDir</code> by using 
+     * <code>srcFile</code>.
+     *  
+     * @param dstDir directory that class file to be generated
+     * @param srcFile json file for generating class file
+     * @throws FileNotFoundException if the file does not exist, is a directory 
+     *      rather than a regular file, or for some other reason cannot be 
+     *      opened for reading
+     * @throws JsonSyntaxException if the file is not a json file, contains 
+     *      malformed json element, or is not a valid representation for an 
+     *      object of <code>ClassInfo</code>
+     * @throws JsonIOException if there was a problem reading from the Reader
+     * @throws IllegalAccessException  if the getter methods of created 
+     *      <code>ClassInfo</code> object are inaccessible
+     * @throws InvocationTargetExeception  if the getter methods of created 
+     *      <code>ClassInfo</code> object throw exceptions
+     * @throws UnsupportedBytecodeException  if unsupported bytecode is used in 
+     *      the json file
+     * @throws IOException if an I/O error occurs to internal Writer of this 
+     *      method
+     */
+    private void generateClassFile(File dstDir, File srcFile)
+            throws FileNotFoundException, JsonSyntaxException, JsonIOException, 
+                   IllegalAccessException, InvocationTargetException, 
+                   UnsupportedBytecodeException, IOException {
+        ClassWriter writer;
         JsonReader reader;
-        List<ClassInfo> classInfos;
 
-        reader = new JsonReader();
-        classInfos = new ArrayList<>();
+        writer = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
+        reader = new JsonReader(srcFile);
 
-        LOGGER.info("---Start reading json files from root directory" 
-                    + dir.getPath() + ".---");
+        reader.accept(writer);
+
+        BufferedOutputStream bos;
+        File classFile;
+        File dstPkgDir;
+
+        dstPkgDir = new File(dstDir, 
+                             reader.readPackagename()
+                                   .replace('.', File.separatorChar));
+            
+        if (dstPkgDir.mkdirs()) {
+            LOGGER.info("Created package directory " + dstPkgDir + ".");
+        }
+
+        classFile = new File(dstPkgDir, reader.readClassname() + ".class");
+        bos = new BufferedOutputStream(new FileOutputStream(classFile)); 
+        
+        try {
+            bos.write(writer.toByteArray());
+        } finally {
+            try {
+                bos.close();
+            } catch (IOException e) {
+                LOGGER.warning("Cannot close the writer after writing " 
+                               + classFile + ".");
+            }
+        }   
+    }
+
+    private void generateClassFiles(File dstDir, File srcDir) 
+            throws IOException {
+        LOGGER.info("------- Start generating class files. -------\n"
+                    + "source directory: " 
+                    + srcDir
+                    + "\ndestination directory: " 
+                    + dstDir);
+        
+        if (dstDir.mkdirs()) {
+            LOGGER.info("Created destination directory " + dstDir + ".");
+        }
                     
-        Files.walkFileTree(dir.toPath(), 
+        Files.walkFileTree(srcDir.toPath(), 
                            new SimpleFileVisitor<Path>() {
                                 @Override
                                 public FileVisitResult visitFile(
                                         Path path, BasicFileAttributes attr) {
                                     try {
-                                        classInfos.add(
-                                                reader.read(path.toFile()));
+                                        generateClassFile(dstDir, path.toFile());
                                     } catch (FileNotFoundException e) {
                                         LOGGER.info("Skip reading " 
-                                                    + path.toString()
+                                                    + path
                                                     + ". It may not exist, or "
                                                     + "be opened.");    
                                     } catch (JsonSyntaxException e) {
                                         LOGGER.info("Skip reading " 
-                                                    + path.toString() 
-                                                    + ". " + e.getMessage());
+                                                    + path 
+                                                    + ". " 
+                                                    + e.getMessage());
                                     } catch (JsonIOException e) {
                                         LOGGER.warning("Unable to read "
-                                                      + path.toString() 
-                                                      + ". There is a problem "
-                                                      + "reading from reader.");
+                                                       + path 
+                                                       + ". There is a problem "
+                                                       + "in reader while "
+                                                       + "reading.");
                                     } catch (IllegalAccessException 
                                              | InvocationTargetException e) {
                                         LOGGER.severe("Failed to read " 
-                                                      + path.toString()
+                                                      + path
                                                       + ". Unable to check the "
                                                       + "json file format.");
-                                    } 
+                                    } catch (UnsupportedBytecodeException e) {
+                                        LOGGER.info("Skip parsing " 
+                                                    + path 
+                                                    + ". "
+                                                    + e.getMessage());
+                                    } catch (IOException e) {
+                                        LOGGER.warning("Unable to write class "
+                                                       + "file using " 
+                                                       + path 
+                                                       + ". There is a" 
+                                                       + "problem in writer "
+                                                       + "while writing.");
+                                    }
 
                                     return FileVisitResult.CONTINUE;
                                 }});
 
-        LOGGER.info("---Finished reading json files from root directory " 
-                    + dir.getPath() + ".---");
-
-        return classInfos;
-    }
-
-    private void generateClassFiles(File outDir, List<ClassInfo> classinfos) {
-        LOGGER.info("---Start writing class files to " 
-                    + outDir.getPath() + ".---");
-            
-        if (outDir.mkdirs()) {
-            LOGGER.info("Creating output directory " + outDir.getPath() + ".");
-        }
-    
-        for (ClassInfo classinfo : classinfos) {
-            File outPkgDir;
-            File classFile;
-
-            outPkgDir = new File(outDir, 
-                                 classinfo.getPackagename()
-                                          .replace(".", File.separator));
-                
-            if (outPkgDir.mkdirs()) {
-                LOGGER.info("Creating package directory " 
-                            + outPkgDir.getPath() + ".");
-            }
-
-            classFile = new File(outPkgDir, 
-                                 classinfo.getClassname() + ".class");
-
-            try {    
-                ClassWriter.write(classFile, classinfo); 
-            } catch (DuplicateMemberException e) {
-                LOGGER.severe("Failed to write " 
-                              + classFile.getPath()
-                              + ". Unable to compose ClassFile object.");
-            } catch (FileNotFoundException e) {
-                LOGGER.warning("Failed to write " 
-                              + classFile.getPath() 
-                              + ". The class file cannot be created or "
-                              + "opened.");
-            } catch (IOException e) {
-                LOGGER.warning("Failed to write " + classFile.getPath() + ".");
-            } 
-        }
-
-        LOGGER.info("---Finished writing class files to " 
-                    + outDir.getPath() + ".---");
+        LOGGER.info("------- Finished generating class files. -------");
     }
 
     private void run() throws IOException {
@@ -151,8 +180,8 @@ public class ClassFileGenerator {
         args = cmd.getArgs();
 
         if (cmd.hasOption("h")) {
-            new HelpFormatter().printHelp(
-                    "cfg [options] path_to_directory", opts);
+            new HelpFormatter().printHelp("cfg [options] path_to_directory",             
+                                          opts);
         } else if (args.length == 0) {
             System.err.println("usage: cfg [options] path_to_directory");
             System.err.println("use -h or --help to see options");
@@ -165,7 +194,7 @@ public class ClassFileGenerator {
                             String.join(File.separator, 
                                         System.getProperty("user.home"), 
                                         "class-files"))), 
-                    createClassInfos(new File(args[0])));
+                new File(args[0]));
         }
     }
 
