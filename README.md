@@ -91,11 +91,12 @@ The following json file generates class file that represents the following java 
 
 ```json
 {
+    "version": 55, 
     "packagename": "edu.handong.csee.isel.cfg.gen",
     "classname": "Add", 
     "methodname": "add",
     "methodDesc": "(II)I",
-    "byteStrings": ["1B", "1C", "60", "AC"]
+    "byteStrings": [ 21, 1, 21, 2, 96, 172 ]
 }
 
 ```
