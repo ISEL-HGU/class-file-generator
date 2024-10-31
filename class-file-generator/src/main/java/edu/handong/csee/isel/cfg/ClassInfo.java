@@ -83,7 +83,6 @@ public class ClassInfo {
                     }
                 }
             } catch (IllegalAccessException e) {
-                System.err.println(e.getMessage());
                 e.printStackTrace();
 
                 return false;
