@@ -1,0 +1,10 @@
+{
+    "version": 55,
+    "packagename": "edu.handong.csee.isel.cfg.gen",
+    "classname": "Add", 
+    "methodname": "add",
+    "methodDesc": "(II)I",
+    "bytecode": [ 21, 1, 21, 2, 96, 172 ],
+    "wrongSyntaxElement": "wrong syntax
+}
+    
