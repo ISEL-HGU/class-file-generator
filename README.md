@@ -57,8 +57,8 @@ cfg [options] path_to_src_directory
 
 ### Options
 
-- -d, --directory <output_directory>: Set output directory. <output_directory> can be both absolute and relative path  
-of the output directory. If this option is not specified, output class files are saved in `~/class-files`.
+- -d, --directory <output_directory>: Set output directory. <output_directory> can be both absolute and relative  
+  path of the output directory. If this option is not specified, output class files are saved in `~/class-files`.
 
 - -h, --help: Print help message.
 
@@ -84,8 +84,8 @@ are not provided, default values are applied.
 - `version`: Integer value that denotes the major version of generating class file. It follows Java Virtual Machine  
   Specification (JVMS) (e.g., major version of Java 6 is 50, Java 7 is 51, and so on). The default value is `55`.
 
-- `packagename`: String value that denotes the package name of generating class file. The name of the package can be  
-  seperated with either '.' or '/'. The default value is `"gen"`.
+- `packagename`: String value that denotes the package name of generating class file. The name of the package can  
+  be seperated with either '.' or '/'. The default value is `"gen"`.
   
 - `classname`: String value that denotes the name of generating class file. The default value is  
   `"GeneratedClass<randomInteger>"`.
@@ -152,13 +152,13 @@ public class Add {
 
 ## 6. Limitations
 
-The generated class files do not have fields. Also, they have default constructor and one other method only. The source  
-json file must not contain unsupported opcodes in `bytecode` array.
+The generated class files do not have fields. Also, they have default constructor and one other method only. The  
+source json file must not contain unsupported opcodes in `bytecode` array.
 
 ### Supported Opcodes
 
-Only JVM opcodes that do not use constant pool are supported. The supported opcodes can be divided into no argument  
-opcodes, unary opcodes, jump opcodes, and variable opcodes.
+Only JVM opcodes that do not use constant pool are supported. The supported opcodes can be divided into no  
+argument opcodes, unary opcodes, jump opcodes, and variable opcodes.
 
 - No Argument Opcodes: Opcodes that have no argument.  
 
