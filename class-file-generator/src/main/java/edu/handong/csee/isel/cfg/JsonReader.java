@@ -1,13 +1,7 @@
 package edu.handong.csee.isel.cfg;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.logging.Logger;
+import java.io.InputStreamReader;
+import java.io.InputStream;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
@@ -31,54 +25,24 @@ import org.objectweb.asm.Type;
  * @see https://github.com/ISEL-HGU/class-file-generator
  */
 public class JsonReader {
+    private static Gson gson = new Gson();
+
     private ClassInfo info;
 
     /**
      * Constructs a <code>JsonReader</code> object by reading 
      * <code>jsonFile</code>.
      * 
-     * @param jsonFile json file to read
-     * @throws FileNotFoundException if the file does not exist, is a directory 
-     *      rather than a regular file, or for some other reason cannot be 
-     *      opened for reading
-     * @throws JsonSyntaxException if the file is not a json file, contains 
+     * @param inputStream an input stream of json file to be read
+     * @throws JsonIOException if there was a problem reading from the Reader
+     * @throws JsonSyntaxException if the json file contains 
      *      malformed json element, or is not a valid representation for an 
      *      object of <code>ClassInfo</code>
-     * @throws JsonIOException if there was a problem reading from the Reader
-     * @throws IllegalAccessException if the getter methods of created 
-     *      <code>ClassInfo</code> object are inaccessible
-     * @throws InvocationTargetException if the getter methods of created 
-     *      <code>ClassInfo</code> object throw exceptions
      */
-    public JsonReader(File jsonFile) 
-            throws FileNotFoundException, JsonSyntaxException, 
-                   JsonIOException, IllegalAccessException,
-                   InvocationTargetException {
-        try (BufferedReader br 
-                = new BufferedReader(new FileReader(jsonFile))) {
-            if (!jsonFile.getPath().endsWith(".json")) {
-                throw new JsonSyntaxException("The file is not a json file.");
-            }
-
-            info = new Gson().fromJson(br, ClassInfo.class);
-
-            for (Method method : info.getClass().getMethods()) {
-                if (method.getName().startsWith("get") 
-                        && method.invoke(info) == null) { 
-                    throw new JsonSyntaxException(
-                            "The json file does not follow the expected "
-                            + "format.");
-                }
-            }
-        } catch (IOException e) {
-            if (e instanceof FileNotFoundException) {
-                throw (FileNotFoundException) e;
-            }
-
-            Logger.getLogger(getClass().getName())
-                  .warning("Cannot close the reader after reading " 
-                           + jsonFile + ".");
-        }
+    public JsonReader(InputStream inputStream) 
+            throws JsonIOException, JsonSyntaxException {
+        info = gson.fromJson(new InputStreamReader(inputStream), 
+                             ClassInfo.class);
     }
 
     /**
@@ -88,11 +52,10 @@ public class JsonReader {
      * 
      * @param visitor <code>ClassWriter</code> to visit JVMS class file 
      *      structure.
-     * @throws UnsupportedBytecodeException if unsupported bytecode is 
-     *      used in the json file
+     * @throws UnsupportedOpcodeException if unsupported opcode is used in the 
+     *      json file
      */
-    public void accept(ClassWriter visitor) 
-            throws UnsupportedBytecodeException {
+    public void accept(ClassWriter visitor) throws UnsupportedOpcodeException {
         Label[] labels;
         int[] code;
         MethodVisitor mv;       
@@ -100,7 +63,9 @@ public class JsonReader {
         visitor.visit(info.getVersion(), 
                       Opcodes.ACC_PUBLIC, 
                       info.getPackagename()
-                          .replace('.', '/') + '/' + info.getClassname(), 
+                          .replace('.', '/') 
+                          + '/' 
+                          + info.getClassname(), 
                       null,
                       Type.getInternalName(Object.class), 
                       null);
@@ -133,7 +98,7 @@ public class JsonReader {
         labels = new Label[code.length];
 
         for (int i = 0; i < labels.length; i++) {
-            if (Instructions.isJumpInsn(code[i])) {
+            if (SupportedOpcodes.isSupportedJumpOpcode(code[i])) {
                 labels[(code[++i] << 8) + code[++i]] = new Label();
             }
         }
@@ -143,17 +108,17 @@ public class JsonReader {
                 mv.visitLabel(labels[i]);
             }
 
-            if (Instructions.isInsn(code[i])) {
+            if (SupportedOpcodes.isSupportedNoArgOpcode(code[i])) {
                 mv.visitInsn(code[i]);
-            } else if (Instructions.isIntInsn(code[i])) {
+            } else if (SupportedOpcodes.isSupportedUnaryOpcode(code[i])) {
                 mv.visitIntInsn(code[i], code[++i]);
-            } else if (Instructions.isJumpInsn(code[i])) {
+            } else if (SupportedOpcodes.isSupportedJumpOpcode(code[i])) {
                 mv.visitJumpInsn(code[i], labels[(code[++i] << 8) + code[++i]]);
-            } else if (Instructions.isVarInsn(code[i])) {
+            } else if (SupportedOpcodes.isSupportedVarOpcode(code[i])) {
                 mv.visitVarInsn(code[i], code[++i]);
             } else {
-                throw new UnsupportedBytecodeException(
-                        "Unsupported bytecode " + code[i] + " is used.");
+                throw new UnsupportedOpcodeException(
+                        "Unsupported opcode " + code[i] + " is used.");
             }
         }
 
