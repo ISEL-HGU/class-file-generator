@@ -46,8 +46,7 @@ The following command sets environment variables permanently.
 
 ## 4. Usage
 
-After [building](#2-building) and [setting environment](#3-environment-setting), run the application with the  
-following command.
+After [building](#2-building) and [setting environment](#3-environment-setting), run the application with the following command.
 
 ```console
 cfg [options] path_to_src_directory
@@ -92,8 +91,8 @@ are not provided, default values are applied.
 
 - `methodname`: String value that denotes the method name of generating class file. The default value is `"solve"`.
   
-- `methodDesc`: String value that denotes the method description of generating class file. It follow JVMS (e.g., method  
-  description of `int method(int, int)` is (II)I). The default value is `"()V"`.
+- `methodDesc`: String value that denotes the method description of generating class file. It follow JVMS (e.g.,  
+  method description of `int method(int, int)` is (II)I). The default value is `"()V"`.
 
 - `bytecode`: Integer array that denotes the bytecode of generating class file. It follows JVMS (e.g., opcode value of  
   ALOAD is 21 and IADD is 96), but [partial opcodes](#supported-opcodes) are supported. The default value is `[ 177 ]`.
